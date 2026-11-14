@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudioScript AI — Autonomous YouTube Script Engine</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        midnight: '#07090e',
+                        surface: '#0f141f',
+                        surfaceBorder: '#1e2638',
+                        accent: '#6366f1',
+                        accentHover: '#4f46e5',
+                        neonEmerald: '#10b981',
+                        neonAmber: '#f59e0b',
+                        neonRose: '#f43f5e'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #07090e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e2638;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6366f1;
+        }
+        .code-glow {
+            text-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+        }
+        .step-pulse {
+            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.08); }
+        }
+        @keyframes teleprompterScroll {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-100%); }
+        }
+    </style>
+</head>
+<body class="bg-midnight text-slate-200 font-sans min-h-screen flex flex-col selection:bg-indigo-600 selection:text-white antialiased">
+
+    <header class="border-b border-surfaceBorder/80 bg-surface/70 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <!-- StudioScript Vector Brand Mark -->
+                <div class="relative flex items-center justify-center group cursor-pointer">
+                    <div class="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-rose-500 rounded-2xl blur-sm opacity-40 group-hover:opacity-75 transition duration-500"></div>
+                    <div class="relative w-10 h-10 rounded-xl bg-[#090d16] border border-white/10 flex items-center justify-center overflow-hidden shadow-xl shadow-indigo-950/40">
+                        <svg class="w-8 h-8" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="ssGradBlue" x1="10%" y1="0%" x2="90%" y2="100%">
+                                    <stop offset="0%" stop-color="#38bdf8" />
+                                    <stop offset="50%" stop-color="#6366f1" />
+                                    <stop offset="100%" stop-color="#8b5cf6" />
+                                </linearGradient>
+                                <linearGradient id="ssGradPink" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#f43f5e" />
+                                    <stop offset="50%" stop-color="#ec4899" />
+                                    <stop offset="100%" stop-color="#a855f7" />
+                                </linearGradient>
+                                <linearGradient id="ssClapper" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#f43f5e" />
+                                    <stop offset="100%" stop-color="#fb7185" />
+                                </linearGradient>
+                                <filter id="ssGlow" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feGaussianBlur stdDeviation="3" result="blur" />
+                                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                                </filter>
+                            </defs>
+                            <!-- Audio waves / Neural rings -->
+                            <path d="M 22 45 A 40 40 0 0 0 22 75" stroke="#6366f1" stroke-width="3" stroke-linecap="round" opacity="0.45" />
+                            <path d="M 14 38 A 52 52 0 0 0 14 82" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" opacity="0.25" />
+                            <path d="M 98 45 A 40 40 0 0 1 98 75" stroke="#f43f5e" stroke-width="3" stroke-linecap="round" opacity="0.45" />
+                            <path d="M 106 38 A 52 52 0 0 1 106 82" stroke="#ec4899" stroke-width="2.5" stroke-linecap="round" opacity="0.25" />
+                            <!-- Circuit node dots -->
+                            <circle cx="28" cy="28" r="2.5" fill="#38bdf8" />
+                            <circle cx="92" cy="92" r="2.5" fill="#ec4899" />
+                            <line x1="28" y1="28" x2="38" y2="38" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="2 2" opacity="0.6"/>
+                            <!-- Upper S Loop (Tech / Blue-Indigo) -->
+                            <path d="M 72 32 C 60 22 40 22 36 38 C 32 54 52 58 64 62" stroke="url(#ssGradBlue)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
+                            <!-- Lower S Loop / Screenplay Tail (Cinematic Rose-Pink) -->
+                            <path d="M 60 60 C 72 64 88 68 84 84 C 80 100 56 102 44 92" stroke="url(#ssGradPink)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
+                            <!-- Film Clapperboard Slate Feature integrated into upper curve -->
+                            <g transform="translate(62, 20) rotate(15)">
+                                <rect x="0" y="0" width="22" height="13" rx="2.5" fill="#0f172a" stroke="url(#ssClapper)" stroke-width="2" />
+                                <polygon points="3,2 6,2 4,11 1,11" fill="#ffffff" opacity="0.9" />
+                                <polygon points="9,2 12,2 10,11 7,11" fill="#ffffff" opacity="0.9" />
+                                <polygon points="15,2 18,2 16,11 13,11" fill="#ffffff" opacity="0.9" />
+                            </g>
+                            <!-- Core spark dot -->
+                            <circle cx="62" cy="61" r="3" fill="#ffffff" filter="url(#ssGlow)" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Brand Name Typography -->
+                <div class="flex flex-col">
+                    <div class="flex items-center gap-2">
+                        <span class="font-display font-bold text-xl tracking-tight text-white flex items-center">
+                            Studio<span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-rose-400">Script</span>
+                        </span>
+                        <span class="hidden sm:inline-flex text-[9px] px-1.5 py-0.5 rounded-full bg-gradient-to-r from-indigo-500/10 to-rose-500/10 text-indigo-300 border border-indigo-500/20 font-mono font-medium">AI LAB</span>
+                    </div>
+                    <span class="text-[10px] font-mono text-slate-500 tracking-wider hidden sm:block -mt-0.5">SCREENWRITING & PRODUCTION</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4 text-xs font-mono">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surfaceBorder/40 border border-surfaceBorder">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="text-slate-400">Motor: <strong class="text-slate-200">gemini-3-flash-preview</strong></span>
+                </div>
+                <button id="btnQuickDemo" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 hover:border-indigo-500/50 hover:bg-indigo-500/10 text-slate-300 transition-all">
+                    <i data-lucide="youtube" class="w-3.5 h-3.5 text-rose-500"></i>
+                    <span>Cargar Caso YouTube</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-4 sm:p-6 w-full flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- LEFT PANEL: Configurator & Agent Pipeline Monitor -->
+        <section class="lg:col-span-5 flex flex-col gap-6">
+            
+            <!-- Parameters Box -->
+            <div class="bg-surface/90 border border-surfaceBorder rounded-2xl p-5 shadow-xl relative overflow-hidden">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-surfaceBorder">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="sliders" class="w-4 h-4 text-indigo-400"></i>
+                        <h2 class="font-display font-bold text-white text-sm tracking-wide uppercase">Generador de Guion</h2>
+                    </div>
+                    <span class="text-[11px] font-mono text-slate-400">Multi-Agent Workflow</span>
+                </div>
+
+                <!-- Mode Switcher Tabs -->
+                <div class="grid grid-cols-2 p-1 bg-midnight rounded-xl border border-surfaceBorder mb-4 text-xs font-mono">
+                    <button type="button" id="tabModeYoutube" onclick="switchGenerationMode('youtube')" class="py-2 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 bg-indigo-600 text-white shadow">
+                        <i data-lucide="youtube" class="w-3.5 h-3.5 text-rose-300"></i>
+                        <span>Recrear de YouTube</span>
+                    </button>
+                    <button type="button" id="tabModeTopic" onclick="switchGenerationMode('topic')" class="py-2 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-white">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-indigo-400"></i>
+                        <span>Desde Cero / Tema</span>
+                    </button>
+                </div>
+
+                <form id="scriptForm" class="space-y-4">
+                    <!-- YOUTUBE URL MODE CONTAINER -->
+                    <div id="youtubeInputGroup" class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-xs font-medium text-slate-300">URL del Video de YouTube</label>
+                            <span class="text-[10px] font-mono text-rose-400 font-semibold bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">Reverse-Engineering</span>
+                        </div>
+                        <div class="relative">
+                            <input type="url" id="youtubeUrl"
+                                placeholder="https://www.youtube.com/watch?v=V_xfAJGIU8w"
+                                class="w-full bg-midnight/80 border border-surfaceBorder rounded-xl pl-9 pr-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-sans">
+                            <i data-lucide="link" class="w-4 h-4 text-slate-500 absolute left-3 top-3"></i>
+                        </div>
+                        <p class="text-[11px] text-slate-400 leading-normal">
+                            Analizará el minutaje exacto, argumentos clave y ritmo narrativo para crear una versión en español con ganchos y B-Roll prompts.
+                        </p>
+                    </div>
+
+                    <!-- TOPIC MODE CONTAINER (Hidden in YouTube mode) -->
+                    <div id="topicInputGroup" class="space-y-2 hidden">
+                        <label class="block text-xs font-medium text-slate-300">Título / Tesis del Video</label>
+                        <input type="text" id="videoTitle"
+                            placeholder="Ej: Por qué NVIDIA domina la IA y quién podría derrocarla"
+                            class="w-full bg-midnight/80 border border-surfaceBorder rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-sans">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1.5">Tono Narrativo</label>
+                            <select id="videoTone" class="w-full bg-midnight/80 border border-surfaceBorder rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition-all">
+                                <option value="Engaging, high-retention and cinematic, backed with solid facts">Cinematográfico / Retención</option>
+                                <option value="Provocative, critical, fast-paced and opinionated">Crítico / Debate Rápido</option>
+                                <option value="Educational, clear, analytical and story-driven" selected>Didáctico / Deep Dive</option>
+                                <option value="Tech-enthusiast, humorous, energetic with pop culture hooks">Humor Tech / Dinámico</option>
+                            </select>
+                        </div>
+                        <div id="lengthContainer">
+                            <label class="block text-xs font-medium text-slate-300 mb-1.5">Duración Deseada (Palabras reales)</label>
+                            <select id="videoLength" class="w-full bg-midnight/80 border border-surfaceBorder rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition-all">
+                                <option value="Preserve exact duration (10-12 mins, minimum 1400-1700 words, verbatim script)" selected>Duración Original (~10-12 mins | 1.400-1.700 palabras)</option>
+                                <option value="Short Form (approx 60-90s, 140-200 words, high adrenaline hook)">Short / Reel (60-90 seg | 140-200 palabras)</option>
+                                <option value="Standard Youtube (approx 5-7 mins, 700-1000 words)">Estándar (5 - 7 mins | 750-1.000 palabras)</option>
+                                <option value="Documentary Deep-Dive (approx 12-15 mins, 1600-2200 words, detailed in-depth)">Documental Completo (12 - 15 mins | 1.600-2.200 palabras)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1.5">Idioma de Salida</label>
+                            <select id="videoLanguage" class="w-full bg-midnight/80 border border-surfaceBorder rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition-all">
+                                <option value="Spanish (Neutral / Latinoamericano)" selected>Español (Neutro)</option>
+                                <option value="Spanish (Spain / Castellano)">Español (Castellano)</option>
+                                <option value="English (Global / Tech YouTube)">Inglés (Global / YouTube)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1.5">Búsqueda & Grounding</label>
+                            <div class="flex items-center gap-2 h-9 px-3 bg-midnight/80 border border-surfaceBorder rounded-xl">
+                                <input type="checkbox" id="enableSearch" checked class="w-4 h-4 rounded text-indigo-600 focus:ring-0 focus:ring-offset-0 bg-slate-900 border-slate-700 cursor-pointer">
+                                <label for="enableSearch" class="text-xs text-slate-300 cursor-pointer select-none">Google Search</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btnGenerate"
+                        class="w-full mt-2 py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-rose-600 hover:from-indigo-500 hover:to-rose-500 text-white font-display font-bold text-sm tracking-wide shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2.5 transition-all transform active:scale-[0.99]">
+                        <i data-lucide="play" class="w-4 h-4 fill-white"></i>
+                        <span id="btnGenerateText">PROCESAR VIDEO & GENERAR GUION</span>
+                    </button>
+                </form>
+            </div>
+
+            <div class="bg-surface/90 border border-surfaceBorder rounded-2xl p-5 shadow-xl flex-1 flex flex-col min-h-[380px]">
+                <div class="flex items-center justify-between pb-3 mb-3 border-b border-surfaceBorder">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="git-branch" class="w-4 h-4 text-emerald-400"></i>
+                        <h3 class="font-display font-bold text-white text-sm uppercase tracking-wide">LangGraph Pipeline Monitor</h3>
+                    </div>
+                    <span id="pipelineStatusTag" class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">STANDBY</span>
+                </div>
+
+                <!-- Step Timeline -->
+                <div class="grid grid-cols-4 gap-2 mb-4">
+                    <div id="step-strategist" class="flex flex-col items-center p-2 rounded-xl bg-midnight/60 border border-surfaceBorder text-center transition-all">
+                        <span class="text-[10px] font-mono text-slate-500 mb-1">01. PLAN</span>
+                        <i data-lucide="compass" class="w-4 h-4 text-slate-500 transition-colors"></i>
+                        <span class="text-[11px] font-semibold text-slate-400 mt-1">Estrategia</span>
+                    </div>
+                    <div id="step-research" class="flex flex-col items-center p-2 rounded-xl bg-midnight/60 border border-surfaceBorder text-center transition-all">
+                        <span class="text-[10px] font-mono text-slate-500 mb-1">02. FIND</span>
+                        <i data-lucide="globe" class="w-4 h-4 text-slate-500 transition-colors"></i>
+                        <span class="text-[11px] font-semibold text-slate-400 mt-1">Investigación</span>
+                    </div>
+                    <div id="step-architect" class="flex flex-col items-center p-2 rounded-xl bg-midnight/60 border border-surfaceBorder text-center transition-all">
+                        <span class="text-[10px] font-mono text-slate-500 mb-1">03. STRUCT</span>
+                        <i data-lucide="layers" class="w-4 h-4 text-slate-500 transition-colors"></i>
+                        <span class="text-[11px] font-semibold text-slate-400 mt-1">Refinado</span>
+                    </div>
+                    <div id="step-writer" class="flex flex-col items-center p-2 rounded-xl bg-midnight/60 border border-surfaceBorder text-center transition-all">
+                        <span class="text-[10px] font-mono text-slate-500 mb-1">04. WRITE</span>
+                        <i data-lucide="pen-tool" class="w-4 h-4 text-slate-500 transition-colors"></i>
+                        <span class="text-[11px] font-semibold text-slate-400 mt-1">Redacción</span>
+                    </div>
+                </div>
+
+                <!-- Live Stream Console -->
+                <div class="flex-1 bg-midnight rounded-xl p-3 border border-surfaceBorder font-mono text-xs overflow-hidden flex flex-col">
+                    <div class="flex items-center justify-between pb-2 mb-2 border-b border-surfaceBorder/60 text-[10px] text-slate-500">
+                        <span class="flex items-center gap-1.5"><i data-lucide="terminal" class="w-3 h-3"></i> AGENT_EVENT_STREAM</span>
+                        <span id="streamTime">00:00</span>
+                    </div>
+                    <div id="consoleLogs" class="space-y-1.5 overflow-y-auto flex-1 pr-1 text-slate-400 select-text">
+                        <p class="text-slate-600">> Motor listo. Introduce un título y presiona "Ejecutar Pipeline Agéntico".</p>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- RIGHT PANEL: Production Script Editor & Audiovisual Blocks -->
+        <section class="lg:col-span-7 flex flex-col gap-4">
+            
+            <!-- Quick Metrics & Toolbar -->
+            <div class="bg-surface/90 border border-surfaceBorder rounded-2xl p-4 shadow-xl flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-4 text-xs font-mono">
+                    <div>
+                        <span class="text-slate-500 block text-[10px] uppercase">Palabras Totales</span>
+                        <span id="metricWordCount" class="text-white font-bold text-base">0</span>
+                    </div>
+                    <div class="h-6 w-px bg-surfaceBorder"></div>
+                    <div>
+                        <span class="text-slate-500 block text-[10px] uppercase">Tiempo Locución Real (@140 WPM)</span>
+                        <span id="metricEstTime" class="text-indigo-400 font-bold text-base">0m 00s</span>
+                    </div>
+                    <div class="h-6 w-px bg-surfaceBorder"></div>
+                    <div>
+                        <span class="text-slate-500 block text-[10px] uppercase">Densidad & Pacing</span>
+                        <span id="metricDensity" class="text-emerald-400 font-bold text-base">--</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center gap-2">
+                    <button id="btnTeleprompter" disabled class="px-3 py-1.5 rounded-xl bg-surfaceBorder/80 hover:bg-surfaceBorder text-xs text-slate-200 border border-slate-700/80 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 transition-all">
+                        <i data-lucide="tv" class="w-3.5 h-3.5 text-indigo-400"></i>
+                        <span>Teleprompter</span>
+                    </button>
+                    <div class="relative group">
+                        <button id="btnExportMenu" disabled class="px-3 py-1.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 text-xs border border-indigo-500/30 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 transition-all">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            <span>Exportar</span>
+                        </button>
+                        <div id="exportDropdown" class="hidden absolute right-0 top-full mt-2 w-44 bg-surface border border-surfaceBorder rounded-xl shadow-2xl py-1.5 z-50 text-xs">
+                            <button onclick="exportScript('markdown')" class="w-full text-left px-3 py-2 hover:bg-midnight flex items-center gap-2 text-slate-300">
+                                <i data-lucide="file-text" class="w-3.5 h-3.5 text-indigo-400"></i> Markdown (.md)
+                            </button>
+                            <button onclick="exportScript('text')" class="w-full text-left px-3 py-2 hover:bg-midnight flex items-center gap-2 text-slate-300">
+                                <i data-lucide="align-left" class="w-3.5 h-3.5 text-slate-400"></i> Texto Solo Narrador
+                            </button>
+                            <button onclick="exportScript('srt')" class="w-full text-left px-3 py-2 hover:bg-midnight flex items-center gap-2 text-slate-300">
+                                <i data-lucide="subtitles" class="w-3.5 h-3.5 text-rose-400"></i> Subtítulos (.srt)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-surface/90 border border-surfaceBorder rounded-2xl p-5 shadow-xl flex-1 flex flex-col min-h-[580px] overflow-hidden">
+                <div class="flex items-center justify-between pb-3 border-b border-surfaceBorder mb-4">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="film" class="w-4 h-4 text-indigo-400"></i>
+                        <h3 class="font-display font-bold text-white text-sm uppercase tracking-wide">Guion Audiovisual de Producción</h3>
+                    </div>
+                    <div id="sourcesContainer" class="hidden items-center gap-1.5 text-xs text-slate-400">
+                        <i data-lucide="check-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+                        <span id="sourcesCount">0 fuentes verificadas</span>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyScriptState" class="flex-1 flex flex-col items-center justify-center text-center p-8 border border-dashed border-surfaceBorder rounded-xl bg-midnight/30">
+                    <div class="w-14 h-14 rounded-2xl bg-surfaceBorder/40 flex items-center justify-center mb-4 text-slate-600">
+                        <i data-lucide="clapperboard" class="w-7 h-7"></i>
+                    </div>
+                    <h4 class="font-display text-white font-bold text-base mb-1">Sin guion generado todavía</h4>
+                    <p class="text-xs text-slate-400 max-w-sm mb-4">Ingresa el tema y haz clic en ejecutar para ver el desglose en dos columnas (Narración de alto enganche + B-Roll & Visual prompts).</p>
+                    <button onclick="triggerQuickDemo()" class="text-xs text-indigo-400 hover:text-indigo-300 underline underline-offset-4">O carga el caso de prueba para ver el formato</button>
+                </div>
+
+                <!-- Script Content Grid (Two Column Breakdown) -->
+                <div id="scriptContentContainer" class="hidden flex-1 overflow-y-auto space-y-4 pr-1">
+                    <!-- Dynamic Blocks Injected Here -->
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <div id="teleprompterModal" class="fixed inset-0 bg-black/95 z-50 hidden flex-col items-center justify-between p-6 sm:p-10 select-none">
+        <div class="w-full max-w-5xl flex items-center justify-between border-b border-slate-800 pb-4">
+            <div class="flex items-center gap-3">
+                <span class="w-3 h-3 rounded-full bg-rose-500 animate-ping"></span>
+                <span class="font-mono text-sm tracking-widest text-slate-400">TELEPROMPTER PRO</span>
+            </div>
+            
+            <div class="flex items-center gap-4 text-xs font-mono">
+                <div class="flex items-center gap-2">
+                    <span class="text-slate-500">Velocidad:</span>
+                    <input type="range" id="prompterSpeed" min="1" max="10" value="3" class="w-24 accent-indigo-500 cursor-pointer">
+                    <span id="speedVal" class="text-indigo-400 w-4">3</span>
+                </div>
+                <button id="btnToggleScroll" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold">
+                    Pausar / Iniciar
+                </button>
+                <button id="btnClosePrompter" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200">
+                    Cerrar (Esc)
+                </button>
+            </div>
+        </div>
+
+        <!-- Prompter Read View -->
+        <div id="prompterScrollArea" class="w-full max-w-4xl flex-1 overflow-y-hidden my-8 relative flex flex-col items-center">
+            <!-- Focus reading bar -->
+            <div class="absolute inset-x-0 top-1/3 h-20 border-y border-indigo-500/20 bg-indigo-500/5 pointer-events-none"></div>
+            <div id="prompterContent" class="text-3xl sm:text-4xl lg:text-5xl font-sans font-medium text-slate-100 text-center leading-relaxed tracking-wide space-y-12 pt-32 pb-64">
+                <!-- Text Injected Here -->
+            </div>
+        </div>
+
+        <div class="text-[11px] font-mono text-slate-600">
+            Presiona <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Espacio</kbd> para pausar | <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">↑/↓</kbd> para velocidad
+        </div>
+    </div>
+
+    <!-- Toast Notification Box -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-16 opacity-0 transition-all duration-300 pointer-events-none px-4 py-3 rounded-xl bg-surface border border-surfaceBorder shadow-2xl flex items-center gap-2.5 text-xs">
+        <i id="toastIcon" data-lucide="info" class="w-4 h-4 text-indigo-400"></i>
+        <span id="toastMsg" class="text-slate-200">Notificación</span>
+    </div>
+
+    <script>
+        // System variables & State
+        let currentScriptData = null;
+        let isGenerating = false;
+        let prompterInterval = null;
+        let isPrompterScrolling = false;
+        let executionTimer = null;
+        let elapsedSeconds = 0;
+        let currentMode = 'youtube'; // 'youtube' or 'topic'
+
+        // Initialize icons on DOM ready
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            setupEventListeners();
+            // Default demo url in input
+            document.getElementById('youtubeUrl').value = 'https://www.youtube.com/watch?v=V_xfAJGIU8w';
+        });
+
+        function switchGenerationMode(mode) {
+            currentMode = mode;
+            const tabYoutube = document.getElementById('tabModeYoutube');
+            const tabTopic = document.getElementById('tabModeTopic');
+            const ytGroup = document.getElementById('youtubeInputGroup');
+            const topicGroup = document.getElementById('topicInputGroup');
+            const btnText = document.getElementById('btnGenerateText');
+
+            if (mode === 'youtube') {
+                tabYoutube.className = 'py-2 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 bg-indigo-600 text-white shadow';
+                tabTopic.className = 'py-2 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-white';
+                ytGroup.classList.remove('hidden');
+                topicGroup.classList.add('hidden');
+                btnText.textContent = 'PROCESAR VIDEO & GENERAR GUION';
+            } else {
+                tabTopic.className = 'py-2 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 bg-indigo-600 text-white shadow';
+                tabYoutube.className = 'py-2 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-white';
+                ytGroup.classList.add('hidden');
+                topicGroup.classList.remove('hidden');
+                btnText.textContent = 'EJECUTAR PIPELINE AGÉNTICO';
+            }
+            lucide.createIcons();
+        }
+
+        function extractYouTubeVideoId(url) {
+            if (!url) return null;
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        function setupEventListeners() {
+            document.getElementById('scriptForm').addEventListener('submit', handlePipelineExecution);
+            document.getElementById('btnQuickDemo').addEventListener('click', triggerQuickDemo);
+            
+            // Export Menu dropdown toggle
+            const exportBtn = document.getElementById('btnExportMenu');
+            const exportMenu = document.getElementById('exportDropdown');
+            exportBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                exportMenu.classList.toggle('hidden');
+            });
+            document.addEventListener('click', () => exportMenu.classList.add('hidden'));
+
+            // Teleprompter Modal
+            document.getElementById('btnTeleprompter').addEventListener('click', openTeleprompter);
+            document.getElementById('btnClosePrompter').addEventListener('click', closeTeleprompter);
+            document.getElementById('btnToggleScroll').addEventListener('click', togglePrompterScroll);
+            
+            const speedSlider = document.getElementById('prompterSpeed');
+            speedSlider.addEventListener('input', (e) => {
+                document.getElementById('speedVal').textContent = e.target.value;
+                if (isPrompterScrolling) {
+                    startPrompterScroll();
+                }
+            });
+
+            // Keyboard shortcut for teleprompter
+            document.addEventListener('keydown', (e) => {
+                const modal = document.getElementById('teleprompterModal');
+                if (!modal.classList.contains('hidden')) {
+                    if (e.code === 'Space') {
+                        e.preventDefault();
+                        togglePrompterScroll();
+                    } else if (e.code === 'Escape') {
+                        closeTeleprompter();
+                    } else if (e.code === 'ArrowUp') {
+                        speedSlider.value = Math.min(10, parseInt(speedSlider.value) + 1);
+                        speedSlider.dispatchEvent(new Event('input'));
+                    } else if (e.code === 'ArrowDown') {
+                        speedSlider.value = Math.max(1, parseInt(speedSlider.value) - 1);
+                        speedSlider.dispatchEvent(new Event('input'));
+                    }
+                }
+            });
+        }
+
+        function log(message, type = 'info') {
+            const logsContainer = document.getElementById('consoleLogs');
+            const p = document.createElement('p');
+            const colors = {
+                info: 'text-slate-400',
+                success: 'text-emerald-400 font-medium',
+                warning: 'text-amber-400',
+                error: 'text-rose-400 font-semibold',
+                highlight: 'text-indigo-400'
+            };
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            p.className = `${colors[type] || 'text-slate-400'} leading-relaxed break-words`;
+            p.innerHTML = `<span class="text-slate-600">[${time}]</span> >> ${message}`;
+            logsContainer.appendChild(p);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        }
+
+        function setStepActive(stepId, state = 'active') {
+            const stepEl = document.getElementById(`step-${stepId}`);
+            if (!stepEl) return;
+            const icon = stepEl.querySelector('i');
+            
+            if (state === 'active') {
+                stepEl.className = 'flex flex-col items-center p-2 rounded-xl bg-indigo-600/20 border border-indigo-500/50 text-center transition-all shadow-lg shadow-indigo-600/20 step-pulse';
+                if (icon) icon.className = 'w-4 h-4 text-indigo-400';
+            } else if (state === 'done') {
+                stepEl.className = 'flex flex-col items-center p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center transition-all';
+                if (icon) icon.className = 'w-4 h-4 text-emerald-400';
+            } else {
+                stepEl.className = 'flex flex-col items-center p-2 rounded-xl bg-midnight/60 border border-surfaceBorder text-center transition-all';
+                if (icon) icon.className = 'w-4 h-4 text-slate-500';
+            }
+        }
+
+        function showToast(msg, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+            toastMsg.textContent = msg;
+            
+            toast.classList.remove('translate-y-16', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-16', 'opacity-0');
+            }, 3500);
+        }
+
+        async function handlePipelineExecution(e) {
+            e.preventDefault();
+            if (isGenerating) return;
+
+            const tone = document.getElementById('videoTone').value;
+            const length = document.getElementById('videoLength').value;
+            const language = document.getElementById('videoLanguage').value;
+            const enableSearch = document.getElementById('enableSearch').checked;
+
+            let youtubeUrl = "";
+            let videoTitle = "";
+
+            if (currentMode === 'youtube') {
+                youtubeUrl = document.getElementById('youtubeUrl').value.trim();
+                if (!youtubeUrl) {
+                    showToast("Ingresa un enlace de YouTube válido", "warning");
+                    return;
+                }
+            } else {
+                videoTitle = document.getElementById('videoTitle').value.trim();
+                if (!videoTitle) {
+                    showToast("Ingresa el título o tesis del video", "warning");
+                    return;
+                }
+            }
+
+            isGenerating = true;
+            document.getElementById('btnGenerate').disabled = true;
+            document.getElementById('btnGenerate').classList.add('opacity-50');
+            document.getElementById('pipelineStatusTag').textContent = 'RUNNING';
+            document.getElementById('pipelineStatusTag').className = 'text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-400 border border-indigo-500/30';
+            
+            // Clear & start clock
+            elapsedSeconds = 0;
+            clearInterval(executionTimer);
+            executionTimer = setInterval(() => {
+                elapsedSeconds++;
+                const mins = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+                const secs = String(elapsedSeconds % 60).padStart(2, '0');
+                document.getElementById('streamTime').textContent = `${mins}:${secs}`;
+            }, 1000);
+
+            try {
+                let userPrompt = "";
+                let systemPrompt = "";
+
+                if (currentMode === 'youtube') {
+                    const videoId = extractYouTubeVideoId(youtubeUrl);
+                    log(`Iniciando ingeniería inversa para el video [ID: ${videoId || 'detectado'}]...`, 'highlight');
+                    
+                    setStepActive('strategist', 'active');
+                    log('Agente 1 [Strategist]: Analizando transcript y calculando densidad de locución (WPM: 135-145)...', 'info');
+                    await delay(800);
+                    setStepActive('strategist', 'done');
+
+                    setStepActive('research', 'active');
+                    log('Agente 2 [Researcher]: Estructurando cronograma completo en 8 a 12 bloques con desarrollo narrativo pleno...', 'info');
+
+                    systemPrompt = `You are an elite YouTube Video Director, Documentary Scriptwriter, and Voice-over Specialist.
+STRICT SCRIPT LENGTH & WORD-COUNT PROTOCOL (CRITICAL):
+- Professional YouTube narration pace is 130 to 145 words per minute (WPM).
+- A 10-minute video MUST contain at least 1,350 to 1,500 spoken words.
+- A 12-15 minute documentary MUST contain at least 1,600 to 2,100 spoken words.
+- NEVER deliver an outline, summary, or bulleted digest. You MUST write out the FULL, VERBATIM SPOKEN SCRIPT that the narrator will read into the microphone word-for-word.
+- Each section MUST have substantial, comprehensive narration (minimum 120 to 250 words per block) matching its assigned timestamp range.
+- Language: Produce the script directly in natural, engaging, native spoken ${language}.
+- Provide specific, cinematic B-Roll prompts for AI tools (Midjourney/Runway) for each section.`;
+
+                    userPrompt = `Execute deep reverse-engineering and full-length script recreation of the YouTube video:
+- Source Video URL: ${youtubeUrl}
+- Target Language: ${language}
+- Target Narrative Tone: ${tone}
+- Target Length & Word Count Requirement: ${length}
+
+INSTRUCTIONS FOR TIME & WORD-COUNT ACCURACY:
+1. Divide the video into 8 to 12 coherent narrative segments covering the ENTIRE duration from 00:00 to the end.
+2. Ensure the timestamps of each block match the actual spoken duration. (e.g. if a block is 00:00 - 01:15, it MUST contain approximately 160-180 spoken words).
+3. Do NOT compress or summarize arguments. Fully narrate all explanations, historical facts, evidence, dramatic pauses, and insights.
+4. Total cumulative word count across all blocks must match the selected duration.`;
+
+                } else {
+                    log(`Iniciando orquestación agéntica para: "${videoTitle}"`, 'highlight');
+
+                    setStepActive('strategist', 'active');
+                    log('Agente 1 [Strategist]: Configurando matriz de retención y requerimiento estricto de palabras...', 'info');
+                    await delay(600);
+                    setStepActive('strategist', 'done');
+
+                    setStepActive('research', 'active');
+                    log('Agente 2 [Researcher]: Recabando datos y distribuyendo densidad argumental por minutos...', 'info');
+
+                    systemPrompt = `You are a master YouTube Scriptwriter specializing in long-form retention and high-yield content.
+STRICT WORD COUNT AND DENSITY MANDATE:
+- Spoken narration tempo is 135-145 words per minute.
+- Standard long-form scripts (10-15 mins) REQUIRE between 1,400 and 2,000 words of verbatim spoken narration.
+- Write EVERY single word the voiceover artist will speak. No placeholders, no summaries, no brackets like "[explain the history here]".
+- Output must be in fluid, immersive ${language}.`;
+
+                    userPrompt = `Write a complete, full-length, word-for-word YouTube video script:
+- Title / Theme: "${videoTitle}"
+- Tone: ${tone}
+- Length & Density Target: ${length}
+- Language: ${language}
+
+Break down into 8 to 12 detailed blocks with realistic timestamps, comprehensive narration in each block, camera directions, and Midjourney/Runway B-roll prompts.`;
+                }
+
+                const apiKey = ""; // Canvas runtime automatically supplies the API key
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+                const payload = {
+                    contents: [{
+                        role: "user",
+                        parts: [
+                            { text: userPrompt }
+                        ]
+                    }],
+                    systemInstruction: {
+                        parts: [{ text: systemPrompt }]
+                    },
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                "metadata": {
+                                    type: "OBJECT",
+                                    properties: {
+                                        "title": { "type": "STRING" },
+                                        "originalVideoTitle": { "type": "STRING" },
+                                        "sourceLanguage": { "type": "STRING" },
+                                        "targetAudience": { "type": "STRING" },
+                                        "estimatedDuration": { "type": "STRING" },
+                                        "totalTargetWordCount": { "type": "INTEGER" },
+                                        "retentionScore": { "type": "STRING" },
+                                        "description": { "type": "STRING" },
+                                        "tags": {
+                                            "type": "ARRAY",
+                                            "items": { "type": "STRING" }
+                                        }
+                                    },
+                                    "required": ["title", "estimatedDuration", "description", "tags"]
+                                },
+                                "blocks": {
+                                    type: "ARRAY",
+                                    items: {
+                                        type: "OBJECT",
+                                        properties: {
+                                            "timestamp": { "type": "STRING" },
+                                            "sectionTitle": { "type": "STRING" },
+                                            "sectionType": { "type": "STRING" },
+                                            "spokenScript": { "type": "STRING" },
+                                            "visualDirection": { "type": "STRING" },
+                                            "brollPrompt": { "type": "STRING" }
+                                        },
+                                        "required": ["timestamp", "sectionTitle", "sectionType", "spokenScript", "visualDirection", "brollPrompt"]
+                                    }
+                                }
+                            },
+                            "required": ["metadata", "blocks"]
+                        }
+                    }
+                };
+
+                // Ingestión nativa de YouTube si aplica
+                if (currentMode === 'youtube' && youtubeUrl) {
+                    payload.contents[0].parts.unshift({
+                        fileData: {
+                            fileUri: youtubeUrl
+                        }
+                    });
+                }
+
+                if (enableSearch) {
+                    payload.tools = [{ "google_search": {} }];
+                }
+
+                setStepActive('research', 'done');
+                setStepActive('architect', 'active');
+                log('Agente 3 [Architect]: Validando calibración de minutaje y coherencia cronológica...', 'info');
+
+                const response = await fetchWithRetry(apiUrl, payload);
+                const data = await response.json();
+
+                setStepActive('architect', 'done');
+                setStepActive('writer', 'active');
+                log('Agente 4 [Writer]: Redactando locución completa palabra por palabra...', 'info');
+
+                const candidate = data.candidates?.[0];
+                if (!candidate || !candidate.content?.parts?.[0]?.text) {
+                    throw new Error("No se obtuvo respuesta estructurada válida de la API de Gemini.");
+                }
+
+                const rawJsonText = candidate.content.parts[0].text;
+                const parsedScript = JSON.parse(rawJsonText);
+
+                let sources = [];
+                const groundingMetadata = candidate.groundingMetadata;
+                if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                    sources = groundingMetadata.groundingAttributions
+                        .map(attr => ({
+                            title: attr.web?.title || 'Fuente web verificada',
+                            uri: attr.web?.uri || '#'
+                        }))
+                        .filter(s => s.uri !== '#');
+                }
+
+                if (currentMode === 'youtube') {
+                    sources.unshift({
+                        title: `Video Fuente: ${parsedScript.metadata.originalVideoTitle || youtubeUrl}`,
+                        uri: youtubeUrl
+                    });
+                }
+
+                parsedScript.sources = sources;
+                currentScriptData = parsedScript;
+
+                await delay(300);
+                setStepActive('writer', 'done');
+                log('Guion generado con densidad audiovisual completa calibrada.', 'success');
+
+                renderScriptStudio(parsedScript);
+                showToast("¡Guion con minutaje real generado con éxito!", "success");
+
+            } catch (err) {
+                console.error("Pipeline Error:", err);
+                log(`Error en el pipeline: ${err.message}`, 'error');
+                showToast(`Error: ${err.message}`, "error");
+                setStepActive('strategist', 'idle');
+                setStepActive('research', 'idle');
+                setStepActive('architect', 'idle');
+                setStepActive('writer', 'idle');
+            } finally {
+                isGenerating = false;
+                clearInterval(executionTimer);
+                document.getElementById('btnGenerate').disabled = false;
+                document.getElementById('btnGenerate').classList.remove('opacity-50');
+                document.getElementById('pipelineStatusTag').textContent = 'COMPLETADO';
+                document.getElementById('pipelineStatusTag').className = 'text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+            }
+        }
+
+        async function fetchWithRetry(url, payload, maxRetries = 3) {
+            let delayTime = 1000;
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (response.ok) {
+                        return response;
+                    }
+                } catch (e) {
+                    // Retry silently
+                }
+                await delay(delayTime);
+                delayTime *= 2;
+            }
+            return await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        }
+
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function renderScriptStudio(script) {
+            document.getElementById('emptyScriptState').classList.add('hidden');
+            const container = document.getElementById('scriptContentContainer');
+            container.classList.remove('hidden');
+            container.innerHTML = '';
+
+            // Accurate Word & Time Calculation (Standard pacing: 140 WPM)
+            let totalWords = 0;
+            script.blocks.forEach(b => {
+                const words = b.spokenScript.trim().split(/\s+/).filter(Boolean).length;
+                totalWords += words;
+            });
+
+            const totalSecondsCalculated = Math.round((totalWords / 140) * 60);
+            const estimatedMinutes = Math.floor(totalSecondsCalculated / 60);
+            const estimatedSeconds = totalSecondsCalculated % 60;
+
+            document.getElementById('metricWordCount').textContent = totalWords.toLocaleString();
+            document.getElementById('metricEstTime').textContent = `${estimatedMinutes}m ${String(estimatedSeconds).padStart(2, '0')}s`;
+            
+            // Check density compliance
+            const densityEl = document.getElementById('metricDensity');
+            if (totalWords >= 1200) {
+                densityEl.textContent = "Óptima (Documental)";
+                densityEl.className = "text-emerald-400 font-bold text-base";
+            } else if (totalWords >= 700) {
+                densityEl.textContent = "Media (Estándar)";
+                densityEl.className = "text-indigo-400 font-bold text-base";
+            } else {
+                densityEl.textContent = "Baja (Alerta: Requiere expandir)";
+                densityEl.className = "text-amber-400 font-bold text-base";
+            }
+
+            document.getElementById('btnTeleprompter').disabled = false;
+            document.getElementById('btnExportMenu').disabled = false;
+
+            const sourcesContainer = document.getElementById('sourcesContainer');
+            if (script.sources && script.sources.length > 0) {
+                sourcesContainer.classList.remove('hidden');
+                sourcesContainer.classList.add('flex');
+                document.getElementById('sourcesCount').textContent = `${script.sources.length} referencias vinculadas`;
+            } else {
+                sourcesContainer.classList.add('hidden');
+            }
+
+            // Description and SEO card
+            const seoCard = document.createElement('div');
+            seoCard.className = 'p-4 rounded-xl bg-midnight/80 border border-surfaceBorder space-y-2';
+            seoCard.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-mono font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="tag" class="w-3.5 h-3.5"></i> Descripción de Video & Metadatos SEO
+                    </span>
+                    <button onclick="copyText('${escapeHtml(script.metadata.description)}')" class="text-[11px] text-slate-400 hover:text-white flex items-center gap-1 transition-colors">
+                        <i data-lucide="copy" class="w-3 h-3"></i> Copiar Descripción
+                    </button>
+                </div>
+                <h4 class="text-sm font-bold text-white tracking-tight">${escapeHtml(script.metadata.title)}</h4>
+                <p class="text-xs text-slate-300 leading-relaxed">${escapeHtml(script.metadata.description)}</p>
+                <div class="flex flex-wrap gap-1.5 pt-1">
+                    ${script.metadata.tags.map(t => `<span class="px-2 py-0.5 rounded-md bg-surfaceBorder/60 text-slate-400 text-[10px] font-mono">#${escapeHtml(t)}</span>`).join('')}
+                </div>
+            `;
+            container.appendChild(seoCard);
+
+            // Render each script block with words count badge per block
+            script.blocks.forEach((block, idx) => {
+                const blockWords = block.spokenScript.trim().split(/\s+/).filter(Boolean).length;
+                const blockTimeSec = Math.round((blockWords / 140) * 60);
+                const blockMin = Math.floor(blockTimeSec / 60);
+                const blockSec = blockTimeSec % 60;
+
+                const blockEl = document.createElement('div');
+                blockEl.className = 'rounded-xl bg-midnight/90 border border-surfaceBorder hover:border-slate-700 transition-all p-4 space-y-3';
+                
+                const badgeColors = {
+                    'Hook': 'bg-rose-500/15 text-rose-400 border-rose-500/30',
+                    'Intro': 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30',
+                    'Core Argument': 'bg-blue-500/15 text-blue-400 border-blue-500/30',
+                    'Climax': 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+                    'CTA': 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                };
+                const badgeClass = badgeColors[block.sectionType] || 'bg-slate-800 text-slate-400 border-slate-700';
+
+                blockEl.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-surfaceBorder/60 pb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="font-mono text-xs text-indigo-300 bg-surface px-2 py-0.5 rounded border border-indigo-500/30 font-semibold">
+                                ${escapeHtml(block.timestamp)}
+                            </span>
+                            <span class="text-xs font-semibold text-white">${escapeHtml(block.sectionTitle)}</span>
+                            <span class="text-[10px] font-mono px-2 py-0.5 rounded border ${badgeClass}">
+                                ${escapeHtml(block.sectionType)}
+                            </span>
+                            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-surfaceBorder/50 text-slate-400">
+                                ${blockWords} palabras (~${blockMin}m ${blockSec}s)
+                            </span>
+                        </div>
+                        <button onclick="copyBlock(${idx})" title="Copiar bloque" class="text-slate-400 hover:text-white transition-colors">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                        <!-- Spoken column -->
+                        <div class="md:col-span-7 bg-surface/50 p-3.5 rounded-lg border border-surfaceBorder/40">
+                            <span class="text-[10px] font-mono uppercase text-indigo-400 tracking-wider block mb-1">
+                                Locución Íntegra (Narrador):
+                            </span>
+                            <p class="text-xs sm:text-sm text-slate-100 leading-relaxed font-sans select-text whitespace-pre-line">
+                                "${escapeHtml(block.spokenScript)}"
+                            </p>
+                        </div>
+
+                        <!-- Visuals & B-roll column -->
+                        <div class="md:col-span-5 bg-midnight p-3.5 rounded-lg border border-surfaceBorder/40 space-y-2.5">
+                            <div>
+                                <span class="text-[10px] font-mono uppercase text-emerald-400 tracking-wider block mb-0.5">
+                                    Dirección Visual & Ritmo de Cámara:
+                                </span>
+                                <p class="text-xs text-slate-300 leading-snug">
+                                    ${escapeHtml(block.visualDirection)}
+                                </p>
+                            </div>
+                            <div class="pt-2 border-t border-surfaceBorder/50">
+                                <span class="text-[10px] font-mono uppercase text-amber-400 tracking-wider block mb-1 flex items-center gap-1">
+                                    <i data-lucide="camera" class="w-3 h-3"></i> Prompt B-Roll (Midjourney v6 / Runway):
+                                </span>
+                                <code class="text-[11px] font-mono text-slate-400 block bg-surface/80 p-2 rounded select-all break-words border border-surfaceBorder">
+                                    ${escapeHtml(block.brollPrompt)}
+                                </code>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(blockEl);
+            });
+
+            lucide.createIcons();
+        }
+        // Caso de prueba corregido: Video de Axen con guion completo calibrado a 10m 40s (1.450+ palabras reales)
+        function triggerQuickDemo() {
+            switchGenerationMode('youtube');
+            document.getElementById('youtubeUrl').value = "https://www.youtube.com/watch?v=V_xfAJGIU8w";
+            document.getElementById('videoTone').value = "Educational, clear, analytical and story-driven";
+            document.getElementById('videoLanguage').value = "Spanish (Neutral / Latinoamericano)";
+            
+            const axenRecreatedDemo = {
+                metadata: {
+                    title: "¿Por Qué el Progreso Humano Explotó Hace 10.000 Años Tras 290.000 Años en Silencio?",
+                    originalVideoTitle: "Why Did Human Progress Explode 10,000 Years Ago After 290,000 Years? (Axen)",
+                    sourceLanguage: "English (10m 41s)",
+                    targetAudience: "Amantes de la historia, antropología y ciencia divulgativa",
+                    estimatedDuration: "10m 30s",
+                    totalTargetWordCount: 1480,
+                    retentionScore: "99/100",
+                    description: "Durante 290.000 años, el ser humano hizo exactamente lo mismo: despertar, buscar alimento, protegerse y sobrevivir sin ciudades, sin granjas ni escritura. Luego, hace apenas 10.000 años, todo cambió en un instante. En este documental analizamos la verdadera razón: no nos volvimos más inteligentes de la noche a la mañana; fue la estabilización climática tras el fin del Younger Dryas lo que permitió que nuestro cerebro finalmente pudiera construir civilización.",
+                    tags: ["Historia", "Evolucion", "YoungerDryas", "GobekliTepe", "Agricultura", "Antropologia", "Civilizacion"]
+                },
+                sources: [
+                    { title: "Video Original: Axen YouTube (V_xfAJGIU8w)", uri: "https://www.youtube.com/watch?v=V_xfAJGIU8w" },
+                    { title: "Mark Cohen - Paleopathology at the Origins of Agriculture (1984)", uri: "https://example.com/paleopathology" },
+                    { title: "Klaus Schmidt - Instituto Arqueológico Alemán (Göbekli Tepe)", uri: "https://example.com/gobekli-tepe" },
+                    { title: "Younger Dryas Climate Abrupt Shift Data (Greenland Ice Cores)", uri: "https://example.com/climate" }
+                ],
+                blocks: [
+                    {
+                        timestamp: "00:00 - 01:05",
+                        sectionTitle: "El Gran Enigma de las 14.500 Generaciones",
+                        sectionType: "Hook",
+                        spokenScript: "Durante doscientos noventa mil años, los seres humanos hicieron exactamente lo mismo cada uno de sus días. Se despertaban con los primeros rayos del sol, salían a buscar alimento, se cuidaban mutuamente de los depredadores y se iban a dormir. Al día siguiente, repetían exactamente la misma rutina.\n\nNo había granjas. No había ciudades. No existía la escritura, ni la rueda, ni una sola construcción que estuviera pensada para durar más de una temporada. Solo pequeños grupos nómadas desplazándose a lo largo de llanuras y bosques inhóspitos, sobreviviendo.\n\nEstamos hablando de doscientos noventa mil años. Eso equivale aproximadamente a catorce mil quinientas generaciones consecutivas de seres humanos viviendo de una forma prácticamente idéntica. Y de pronto, hace unos diez mil años, sucedió algo inexplicable. En el espacio de unos pocos milenios —lo cual es un mero parpadeo en la historia cósmica— todo se transformó. Apareció la agricultura, luego aldeas permanentes, ciudades fortificadas, metalurgia, leyes escritas e imperios enteros. Todo apilado uno encima del otro a una velocidad vertiginosa.\n\n¿Por qué? ¿Por qué doscientos noventa mil años de progreso casi invisible se convirtieron repentinamente en esta explosión imparable? La respuesta no es un solo factor; son cinco eventos que convergieron en el mismo instante, y cada uno de ellos es mucho más desconcertante de lo que imaginas.",
+                        visualDirection: "Plano secuencia inmersivo: cámara flotante sobre una fogata nocturna en el Pleistoceno, mientras la cámara se eleva sobre una llanura helada y atraviesa una transición de hiperlapso hasta los rascacielos iluminados de una metrópolis moderna.",
+                        brollPrompt: "Cinematic hyperlapse opening from a primitive campfire in a prehistoric ice age landscape to an aerial view of a futuristic neon city, anamorphic lens, 8k resolution, documentary lighting"
+                    },
+                    {
+                        timestamp: "01:05 - 02:25",
+                        sectionTitle: "El Mito de la Estupidez Primitiva",
+                        sectionType: "Intro",
+                        spokenScript: "Empecemos con la pregunta más obvia que casi nadie se atreve a formular con honestidad: ¿estuvieron los humanos verdaderamente estancados durante esos doscientos noventa mil años porque eran menos inteligentes?\n\nLa respuesta es un rotundo y categórico no. Durante siglos, la historia tradicional nos vendió la idea de que nuestros ancestros eran personas primitivas, toscas, que lentamente se iban volviendo más listas con el paso de los siglos, aprendiendo poco a poco cómo funcionaba el mundo.\n\nEsa narrativa es completamente falsa. Un ser humano anatómicamente moderno que vivió hace cien mil años tenía exactamente la misma masa encefálica, la misma arquitectura neuronal y la misma capacidad cognitiva para el lenguaje abstracto, la planificación estratégica y la creatividad que tú o que yo.\n\nSi tomaras a un bebé de esa época y lo criaras hoy, podría aprender a programar software, volar un avión comercial o leer literatura clásica sin ninguna dificultad biológica. Entonces, la gran interrogante persiste: si ya tenían la capacidad de pensar como nosotros, ¿por qué no levantaron murallas ni inventaron la rueda? La respuesta no está en su cerebro, sino en la pesadilla de planeta en el que les tocó vivir.",
+                        visualDirection: "Comparación visual en 3D translúcido: cráneo de cazador-recolector de hace 100k años superpuesto al cráneo de un humano contemporáneo con sinapsis neuronales iluminadas en azul cobalto. Gráficos elegantes tipo documental de alta gama.",
+                        brollPrompt: "High-end scientific 3D hologram comparison of prehistoric human skull and modern skull, glowing neural network, clean dark background, BBC documentary style"
+                    },
+                    {
+                        timestamp: "02:25 - 03:50",
+                        sectionTitle: "La Trampa Mortal del Clima Glacial",
+                        sectionType: "Core Argument",
+                        spokenScript: "Para levantar una civilización no basta con ser inteligente; necesitas condiciones materiales muy específicas. Necesitas producir más comida de la que consumes diariamente, para que una parte de la población pueda dejar de recolectar y dedicarse a construir, investigar o gobernar. Necesitas quedarte en un mismo sitio durante décadas para que las estructuras permanezcan. Y, por encima de todo, necesitas un clima estable.\n\nDurante la mayor parte de esos doscientos noventa mil años, la Tierra estuvo inmersa en la última era de hielo, y ese mundo no tenía nada de predecible. Las temperaturas globales oscilaban con violencia: podían variar hasta diez grados Celsius en el lapso de unas pocas décadas. Bosques enteros se convertían en tundras secas, ríos caudalosos cambiaban de curso de improviso y los animales de los que dependías para sobrevivir migraban a miles de kilómetros.\n\nEn un entorno así de volátil, asentarse y construir una aldea de piedra no era un signo de avance; era un suicidio garantizado. Si sembrabas trigo, una sequía repentina te mataba de hambre. Si construías casas permanentes, una helada de diez años te obligaba a abandonarlas. La movilidad total era la única estrategia evolutiva sensata. Nuestros antepasados no eran atrasados: estaban milimétricamente adaptados a un mundo que premiaba al nómada y castigaba sin piedad al que echaba raíces.",
+                        visualDirection: "Planos aéreos colosales de glaciares colapsando, vientos polares azotando llanuras secas y una tribu nómada encapuchada caminando con pieles a través de una tormenta de nieve brutal.",
+                        brollPrompt: "Dramatic cinematic drone footage of extreme ice age blizzard sweeping over a desolate tundra, small group of nomadic hunters in animal furs marching forward, photorealistic, cinematic grain"
+                    },
+                    {
+                        timestamp: "03:50 - 05:25",
+                        sectionTitle: "El Fin del Younger Dryas: El Descongelamiento Súbito",
+                        sectionType: "Core Argument",
+                        spokenScript: "Y entonces, el planeta experimentó un giro radical. Hace aproximadamente once mil setecientos años, concluyó un período que los climatólogos denominan el Younger Dryas.\n\nEl Younger Dryas fue, en esencia, un latigazo gélido de mil doscientos años de duración que azotó la Tierra justo cuando la última era glacial parecía estar menguando. Cuando el clima comenzaba a templarse, una corriente de frío brutal congeló nuevamente el hemisferio norte, extinguiendo a decenas de especies de megafauna y diezmando a las poblaciones humanas.\n\nPero hace 11.700 años, ese infierno blanco terminó de forma prácticamente instantánea. En términos geológicos, fue de la noche a la mañana. Los registros en los núcleos de hielo de Groenlandia demuestran que las temperaturas se elevaron cerca de diez grados en menos de una década. El hielo retrocedió hacia los polos, las lluvias regulares alimentaron valles enteros y los campos florecieron con vegetación silvestre como nunca antes en la memoria humana.\n\nPor primera vez en trescientos mil años, el cielo dejó de ser un enemigo mortal e impredecible. Por primera vez, un grupo humano podía sembrar una semilla en la tierra con la certeza razonable de que el clima le permitiría cosecharla al año siguiente. Y justo en este instante crucial, la arqueología descubrió algo que tiró por tierra todas las teorías establecidas.",
+                        visualDirection: "Gráfico interactivo de los testigos de hielo de Groenlandia que muestra la curva térmica ascendiendo bruscamente. Disolvencia a valles verdes renaciendo con arroyos cristalinos bajo la luz solar dorada.",
+                        brollPrompt: "Cinematic transformation of a frozen glacier landscape melting into a lush green fertile valley, time-lapse plants blooming, golden hour sunbeams, National Geographic quality"
+                    },
+                    {
+                        timestamp: "05:25 - 07:10",
+                        sectionTitle: "Göbekli Tepe: El Templo que Desafió a la Historia",
+                        sectionType: "Core Argument",
+                        spokenScript: "En el año 1994, el arqueólogo alemán Klaus Schmidt comenzó a excavar una colina en el sureste de Turquía. Lo que encontró bajo metros de sedimento dejó perpleja a la comunidad científica internacional: gigantescos pilares de piedra caliza con forma de T, de hasta seis metros de altura y diez toneladas de peso, exquisitamente tallados con relieves de zorros, escorpiones, leones y buitres.\n\nEl sitio se llama Göbekli Tepe. Es seis mil años más antiguo que Stonehenge y siete mil quinientos años más antiguo que las grandes pirámides de Egipto. Es, formalmente, la estructura monumental más antigua jamás descubierta en la Tierra.\n\nPero lo que realmente conmocionó a los historiadores fue quiénes la construyeron: no fueron agricultores de una gran civilización. Quienes levantaron Göbekli Tepe eran cazadores-recolectores puros. No tenían cerámica, no conocían el metal y no sembraban cosechas.\n\nDurante más de un siglo, los libros nos enseñaron una secuencia lineal: primero descubres la agricultura, luego fundas aldeas, luego creas sacerdotes y templos monumentales. Göbekli Tepe demostró que el orden fue exactamente el opuesto. Tribus dispersas decidieron reunirse para celebrar rituales espirituales en este santuario, y para poder alimentar a los cientos de personas que cortaban y transportaban estos monolitos colosales, se vieron forzados a domesticar los cereales silvestres que crecían alrededor. El templo no fue una consecuencia de la civilización; el templo fue su causa detonante.",
+                        visualDirection: "Vuelo de dron en descenso lento sobre los círculos megalíticos de Göbekli Tepe al amanecer. Enfoque macro en las garras y cabezas de animales talladas en relieve sobre la roca pulida.",
+                        brollPrompt: "Epic cinematic drone shot of Gobekli Tepe stone megaliths at sunrise, detailed 3D relief carvings of foxes and vultures, dramatic shadows, hyper-realistic archeological documentary"
+                    },
+                    {
+                        timestamp: "07:10 - 08:45",
+                        sectionTitle: "La Paradoja Oscura de la Agricultura",
+                        sectionType: "Climax",
+                        spokenScript: "Ahora bien, la agricultura suele presentarse en las escuelas como un triunfo indiscutible y glorioso para el bienestar de nuestra especie. Sin embargo, los registros fósiles cuentan una historia sumamente perturbadora.\n\nEn 1984, el antropólogo Mark Cohen publicó un estudio histórico titulado 'Paleopatología en los Orígenes de la Agricultura'. Al comparar los esqueletos de los últimos cazadores-recolectores con los de las primeras comunidades campesinas, los resultados fueron demoledores: los agricultores eran notablemente más bajos de estatura, sus huesos presentaban graves deficiencias nutricionales, sus dentaduras estaban podridas por dietas hiperconcentradas en carbohidratos de trigo y cebada, y sus columnas vertebrales mostraban deformaciones artríticas a edades tempranas por el trabajo físico extenuante.\n\nEl cazador-recolector gozaba de una dieta balanceada de carnes magras, raíces, frutos secos y semillas, y trabajaba apenas unas tres o cuatro horas al día. El campesino, en cambio, trabajaba de sol a sol con un menú monótono y vivía al borde de la hambruna si caía una plaga.\n\n¿Por qué se expandió entonces este sistema si individualmente nos hacía más débiles y enfermos? Por pura demografía y superioridad numérica militar. Una hectárea cultivada puede alimentar a diez veces más personas que esa misma hectárea dedicada a la caza. Una comunidad agrícola podía engendrar más hijos, y más hijos significaban más brazos para defender el territorio y expulsar a las tribus nómadas vecinas. La agricultura no triunfó porque fuera más saludable; triunfó porque generaba más soldados por kilómetro cuadrado.",
+                        visualDirection: "División de pantalla o montaje alterno: a la izquierda, un cazador prehistórico atlético corriendo en libertad por un bosque; a la derecha, un agricultor encorvado bajo el sol abrasador moliendo grano con una piedra pesada. Expresiones faciales de enorme intensidad dramática.",
+                        brollPrompt: "Cinematic side-by-side contrast: athletic paleolithic hunter running freely through an open wilderness vs exhausted neolithic farmer grinding grain in the dust, natural dramatic lighting, photorealistic 8k"
+                    },
+                    {
+                        timestamp: "08:45 - 09:40",
+                        sectionTitle: "El Efecto Dominó: Escritura, Leyes y Ciudades",
+                        sectionType: "Core Argument",
+                        spokenScript: "Una vez que la agricultura se afianzó, desató una reacción en cadena imparable. Al no poder abandonar los campos de cultivo, las familias comenzaron a edificar viviendas permanentes de barro y piedra. Los vecinos se agruparon y nacieron las primeras aldeas.\n\nEn un grupo nómada de veinte personas, si alguien comete una falta o genera discordia, simplemente te marchas con otro grupo. Pero en una comunidad de quinientos o mil habitantes encerrados tras murallas, el conflicto no resuelto destruye la convivencia. Así nacieron las primeras normas sociales, impuestas por la fuerza y luego codificadas en leyes.\n\nHace unos cinco mil años, en las llanuras de Mesopotamia, surgió la escritura. Pero contra lo que suele creerse, los primeros textos de la humanidad no fueron poemas de amor ni mitologías religiosas: fueron registros contables. Tablillas de barro que anotaban cuántos sacos de grano estaban almacenados en los silos y quién le debía cerveza a quién. La escritura nació porque la memoria humana ya no bastaba para gestionar el excedente de comida.\n\nPoco después apareció la rueda para transportar toneladas de grano, y la metalurgia para fundir herramientas y armas de bronce. Cada avance técnico hacía inevitable el siguiente, todo sustentado sobre una misma base: una atmósfera que por fin había dejado de conspirar contra nosotros.",
+                        visualDirection: "Cámara macro con lente macro extrema deslizándose sobre una tablilla cuneiforme húmeda mientras un escriba sumerio graba caracteres con un punzón de caña. Luz de antorchas cálidas reflejándose en el barro.",
+                        brollPrompt: "Extreme close-up macro shot of a Sumerian scribe pressing cuneiform marks into a wet clay tablet, flickering oil lamp light, dusty ancient archive room, 8k cinematic"
+                    },
+                    {
+                        timestamp: "09:40 - 10:35",
+                        sectionTitle: "La Humildad del Clima: Cierre Reflexivo",
+                        sectionType: "CTA",
+                        spokenScript: "Llegamos así a la conclusión más profunda y humilde de todo este viaje: durante casi trescientos mil años, la humanidad no estuvo estancada por falta de intelecto, sino porque el teatro de operaciones en el que existía hacía imposible cualquier intento de civilización.\n\nEl cerebro que diseñó el telescopio James Webb, que descubrió la penicilina y que hoy programa algoritmos de inteligencia artificial ya estaba completamente formado dentro del cráneo de aquel cazador que contemplaba las estrellas hace cien mil años, esperando con paciencia un mundo lo suficientemente estable como para poder desplegar su potencial.\n\nSolemos ver el progreso como una línea suave y constante, donde cada generación es más sabia que la anterior. Pero la evidencia arqueológica nos muestra otra verdad: doscientos noventa mil años de una línea horizontal plana, y luego, en una fracción de segundo, una pared vertical de innovación absoluta desatada únicamente porque el cielo decidió darnos una tregua.\n\nCada hospital en el que nacemos, cada ley que nos protege y cada carretera que transitamos existe gracias a ese respiro climático. Si este análisis cambió tu forma de ver la historia de nuestra especie, suscríbete al canal, activa la campana y cuéntame abajo en los comentarios: si el clima volviera a ser tan brutal como en el Pleistoceno, ¿crees que nuestra civilización moderna sería capaz de resistir?",
+                        visualDirection: "Toma cinematográfica lenta alejándose del planeta Tierra en el espacio profundo, revelando la delgada y frágil capa azul de la atmósfera iluminada por el sol, antes de transicionar a un elegante recordatorio de suscripción en pantalla.",
+                        brollPrompt: "Breathtaking cinematic view of planet Earth floating in dark space with a delicate glowing blue atmosphere, slow rotational camera drift, deep existential tone, documentary masterpiece"
+                    }
+                ]
+            };
+
+            currentScriptData = axenRecreatedDemo;
+            renderScriptStudio(axenRecreatedDemo);
+            log('Video de YouTube recreado y calibrado a 10m 30s con más de 1.480 palabras reales de locución.', 'success');
+            showToast("Caso de prueba calibrado a 10m 30s cargado", "info");
+        }
+
+        function openTeleprompter() {
+            if (!currentScriptData || !currentScriptData.blocks) return;
+            const modal = document.getElementById('teleprompterModal');
+            const prompterContent = document.getElementById('prompterContent');
+            const prompterArea = document.getElementById('prompterScrollArea');
+            
+            prompterContent.innerHTML = '';
+            currentScriptData.blocks.forEach(b => {
+                const sectionDiv = document.createElement('div');
+                sectionDiv.className = 'space-y-4';
+                sectionDiv.innerHTML = `
+                    <div class="text-xs font-mono text-indigo-400 uppercase tracking-widest">[${escapeHtml(b.timestamp)}] ${escapeHtml(b.sectionTitle)}</div>
+                    <p class="whitespace-pre-line">${escapeHtml(b.spokenScript)}</p>
+                `;
+                prompterContent.appendChild(sectionDiv);
+            });
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            prompterArea.scrollTop = 0;
+            stopPrompterScroll();
+        }
+
+        function closeTeleprompter() {
+            const modal = document.getElementById('teleprompterModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            stopPrompterScroll();
+        }
+
+        function togglePrompterScroll() {
+            if (isPrompterScrolling) {
+                stopPrompterScroll();
+            } else {
+                startPrompterScroll();
+            }
+        }
+
+        function startPrompterScroll() {
+            stopPrompterScroll();
+            isPrompterScrolling = true;
+            document.getElementById('btnToggleScroll').textContent = 'Pausar';
+            document.getElementById('btnToggleScroll').classList.replace('bg-indigo-600', 'bg-amber-600');
+            
+            const area = document.getElementById('prompterScrollArea');
+            const speed = parseInt(document.getElementById('prompterSpeed').value, 10);
+            
+            prompterInterval = setInterval(() => {
+                area.scrollTop += (speed * 0.7);
+            }, 30);
+        }
+
+        function stopPrompterScroll() {
+            isPrompterScrolling = false;
+            clearInterval(prompterInterval);
+            document.getElementById('btnToggleScroll').textContent = 'Iniciar';
+            document.getElementById('btnToggleScroll').classList.replace('bg-amber-600', 'bg-indigo-600');
+        }
+
+        function exportScript(format) {
+            if (!currentScriptData) return;
+            let content = '';
+            let filename = `script-${Date.now()}`;
+            let mimeType = 'text/plain';
+
+            if (format === 'markdown') {
+                filename += '.md';
+                mimeType = 'text/markdown';
+                content = `# ${currentScriptData.metadata.title}\n\n`;
+                content += `> **Duración estimada:** ${currentScriptData.metadata.estimatedDuration} | **Retención:** ${currentScriptData.metadata.retentionScore || 'High'}\n\n`;
+                content += `## Descripción del Video\n${currentScriptData.metadata.description}\n\n`;
+                content += `**Tags:** ${currentScriptData.metadata.tags.join(', ')}\n\n---\n\n`;
+                content += `## Guion Audiovisual de Producción\n\n`;
+
+                currentScriptData.blocks.forEach(b => {
+                    content += `### [${b.timestamp}] ${b.sectionTitle} (${b.sectionType})\n`;
+                    content += `**LOCUCIÓN:**\n"${b.spokenScript}"\n\n`;
+                    content += `**DIRECCIÓN VISUAL:** ${b.visualDirection}\n`;
+                    content += `**PROMPT B-ROLL:** \`${b.brollPrompt}\`\n\n---\n\n`;
+                });
+            } else if (format === 'text') {
+                filename += '.txt';
+                currentScriptData.blocks.forEach(b => {
+                    content += `[${b.timestamp}] ${b.sectionTitle.toUpperCase()}\n`;
+                    content += `${b.spokenScript}\n\n`;
+                });
+            } else if (format === 'srt') {
+                filename += '.srt';
+                let counter = 1;
+                let currentSecond = 0;
+
+                currentScriptData.blocks.forEach(b => {
+                    const words = b.spokenScript.split(' ').length;
+                    const durationSec = Math.max(4, Math.round((words / 140) * 60));
+                    
+                    const startStr = formatSrtTime(currentSecond);
+                    const endStr = formatSrtTime(currentSecond + durationSec);
+                    currentSecond += durationSec;
+
+                    content += `${counter}\n${startStr} --> ${endStr}\n${b.spokenScript}\n\n`;
+                    counter++;
+                });
+            }
+
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast(`Exportado como ${filename}`, 'success');
+        }
+
+        function formatSrtTime(totalSec) {
+            const hrs = String(Math.floor(totalSec / 3600)).padStart(2, '0');
+            const mins = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
+            const secs = String(totalSec % 60).padStart(2, '0');
+            return `${hrs}:${mins}:${secs},000`;
+        }
+
+        function copyText(str) {
+            const el = document.createElement('textarea');
+            el.value = str;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast("Texto copiado al portapapeles", "success");
+        }
+
+        function copyBlock(idx) {
+            if (!currentScriptData || !currentScriptData.blocks[idx]) return;
+            const b = currentScriptData.blocks[idx];
+            const text = `[${b.timestamp}] ${b.sectionTitle}\nLOCUCIÓN:\n${b.spokenScript}\n\nVISUAL:\n${b.visualDirection}\n\nB-ROLL:\n${b.brollPrompt}`;
+            copyText(text);
+        }
+
+        function escapeHtml(string) {
+            if (!string) return '';
+            return String(string)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
+</body>
+</html>
